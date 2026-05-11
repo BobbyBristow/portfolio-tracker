@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Portfolio Tracker</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#080e1c;--card:#0d1528;--card2:#111e35;--border:rgba(255,255,255,0.07);
+    --text:#dde2ef;--muted:#6b7fa3;--accent:#f0a020;
+    --green:#22c55e;--greenbg:rgba(34,197,94,.12);
+    --red:#ef4444;--redbg:rgba(239,68,68,.12);
+    --blue:#3b82f6;--bluebg:rgba(59,130,246,.12);
+    --radius:12px;--radius-sm:8px;
+  }
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:32px}
+  /* Header */
+  .hdr{background:linear-gradient(170deg,#0c1630 0%,#090e1d 100%);padding:18px 18px 16px;border-bottom:1px solid var(--border)}
+  .hdr-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .hdr-label{font-size:10px;letter-spacing:2.5px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:3px}
+  .hdr-sub{font-size:12px;color:var(--muted)}
+  .total{font-size:38px;font-weight:600;font-family:'Courier New',monospace;letter-spacing:-1px;line-height:1;margin-bottom:6px}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;font-family:'Courier New',monospace;padding:4px 10px;border-radius:var(--radius-sm)}
+  .badge.up{color:var(--green);background:var(--greenbg)}
+  .badge.dn{color:var(--red);background:var(--redbg)}
+  .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);margin-top:10px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+  .dot.live{background:var(--green);box-shadow:0 0 5px var(--green)}
+  .rfr-btn{background:rgba(240,160,32,.1);border:1px solid rgba(240,160,32,.25);color:var(--accent);border-radius:var(--radius-sm);padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit}
+  .rfr-btn:active{opacity:.7}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spinning{animation:spin .9s linear infinite}
+  /* Tabs */
+  .tabs{display:flex;background:#05091488;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  .tab{flex:1;padding:12px 0;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:13px;font-weight:400;cursor:pointer;transition:all .15s;font-family:inherit}
+  .tab.on{border-bottom-color:var(--accent);color:var(--text);font-weight:600;background:rgba(13,21,40,.8)}
+  /* Content */
+  .panel{padding:12px 14px}
+  /* Holding card */
+  .hcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;margin-bottom:8px}
+  .hcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+  .sym{font-size:15px;font-weight:700}
+  .qty{font-size:11px;color:var(--muted);margin-top:2px}
+  .hval{font-size:15px;font-weight:700;font-family:'Courier New',monospace;text-align:right}
+  .hchg{font-size:12px;font-family:'Courier New',monospace;text-align:right}
+  .hchg.up{color:var(--green)} .hchg.dn{color:var(--red)}
+  .hmeta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-family:'Courier New',monospace;margin-bottom:4px}
+  .bar-bg{height:3px;background:rgba(255,255,255,.06);border-radius:3px}
+  .bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+  /* Dividends */
+  .div-sum{background:var(--card);border:1px solid rgba(240,160,32,.2);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:flex;justify-content:space-between}
+  .div-sum-n{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+  .div-sum-v{font-size:26px;font-weight:600;font-family:'Courier New',monospace;color:var(--accent)}
+  .add-btn{width:100%;background:transparent;border:1px dashed rgba(240,160,32,.3);color:var(--accent);border-radius:var(--radius);padding:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:8px}
+  .add-btn:hover{background:rgba(240,160,32,.07)}
+  .form-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+  input,select{width:100%;background:#070c18;border:1px solid var(--border);color:var(--text);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;font-family:inherit;-webkit-appearance:none;appearance:none}
+  input:focus,select:focus{outline:none;border-color:rgba(240,160,32,.4)}
+  .save-btn{width:100%;background:var(--accent);border:none;color:#000;border-radius:var(--radius-sm);padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+  .save-btn:active{opacity:.8}
+  .div-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+  .div-badge{width:36px;height:36px;border-radius:var(--radius-sm);background:var(--bluebg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue);flex-shrink:0}
+  .footer{text-align:center;font-size:10px;color:#2a3550;padding:6px 0 2px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-label">Portfolio</div>
+      <div class="hdr-sub">HSBC InvestDirect &middot; LSE</div>
+    </div>
+    <button class="rfr-btn" onclick="doFetch()">
+      <span id="rIcon">&#8635;</span> Refresh
+    </button>
+  </div>
+  <div class="total" id="ptTotal">£31,268.95</div>
+  <div id="ptBadge" class="badge up">+ £0.00 (0.00%)</div>
+  <div class="status">
+    <div class="dot" id="ptDot"></div>
+    <span id="ptMsg">Loading live prices&hellip;</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" id="tH" onclick="sw('h')">&#9679; Holdings</button>
+  <button class="tab" id="tD" onclick="sw('d')">&#9679; Dividends</button>
+</div>
+
+<div class="panel" id="pH">
+  <div id="hList"></div>
+</div>
+
+<div class="panel" id="pD" style="display:none">
+  <div class="div-sum">
+    <div>
+      <div class="div-sum-n">Total received</div>
+      <div class="div-sum-v" id="dTotal">£470.61</div>
+    </div>
+    <div style="text-align:right">
+      <div class="div-sum-n">Payments</div>
+      <div class="div-sum-v" id="dCount">7</div>
+    </div>
+  </div>
+  <button class="add-btn" id="addBtn" onclick="togForm()">+ Log dividend</button>
+  <div id="dForm" style="display:none">
+    <div class="form-wrap">
+      <div class="form-grid">
+        <div><label for="dDate">Date</label><input type="date" id="dDate"></div>
+        <div><label for="dSym">Stock</label><select id="dSym"></select></div>
+      </div>
+      <div style="margin-bottom:10px"><label for="dAmt">Amount (£)</label><input type="number" id="dAmt" step="0.01" placeholder="0.00"></div>
+      <button class="save-btn" onclick="saveDiv()">Save</button>
+    </div>
+  </div>
+  <div id="dList"></div>
+</div>
+
+<div class="footer">Prices via Yahoo Finance &middot; ~15 min delay<br>Not financial advice</div>
+
+<script>
+const H=[
+  {t:'BARC.L',s:'BARC',n:'Barclays',      q:3127},
+  {t:'BP.L',  s:'BP',  n:'BP',            q:225},
+  {t:'CNA.L', s:'CNA', n:'Centrica',      q:3250},
+  {t:'IKA.L', s:'IKA', n:'Ilika',         q:1000},
+  {t:'LLOY.L',s:'LLOY',n:'Lloyds',        q:6133},
+  {t:'NWG.L', s:'NWG', n:'NatWest',       q:417},
+  {t:'SKA.L', s:'SKA', n:'Shuka Minerals',q:5},
+  {t:'TSCO.L',s:'TSCO',n:'Tesco',         q:236},
+];
+const FB={
+  'BARC.L':{p:4.310, v:4.280, c:0.70},
+  'BP.L':  {p:5.759, v:5.710, c:0.86},
+  'CNA.L': {p:2.065, v:2.040, c:1.23},
+  'IKA.L': {p:0.325, v:0.320, c:1.56},
+  'LLOY.L':{p:0.9705,v:0.965, c:0.57},
+  'NWG.L': {p:5.690, v:5.650, c:0.71},
+  'SKA.L': {p:0.0335,v:0.033, c:1.52},
+  'TSCO.L':{p:4.8075,v:4.780, c:0.57},
+};
+let PR={...FB};
+let DIVS=[
+  {id:1,date:'2025-09-16',s:'BARC',n:'Barclays', a:93.81},
+  {id:2,date:'2025-09-12',s:'NWG', n:'NatWest',  a:39.61},
+  {id:3,date:'2025-09-09',s:'LLOY',n:'Lloyds',   a:74.82},
+  {id:4,date:'2025-06-27',s:'BP',  n:'BP',        a:13.27},
+  {id:5,date:'2025-06-27',s:'TSCO',n:'Tesco',     a:22.30},
+  {id:6,date:'2025-06-05',s:'CNA', n:'Centrica',  a:97.50},
+  {id:7,date:'2025-05-20',s:'LLOY',n:'Lloyds',    a:129.40},
+];
+let formOpen=false;
+
+const fmt=n=>'£'+n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pp=n=>n<1?n.toFixed(4):n.toFixed(3);
+const fd=s=>new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});
+
+function buildH(){
+  const rows=H.map(h=>{
+    const pr=PR[h.t]||FB[h.t];
+    const val=h.q*pr.p,prev=h.q*pr.v,dc=val-prev;
+    return{...h,...pr,val,dc};
+  }).sort((a,b)=>b.val-a.val);
+  const tot=rows.reduce((s,r)=>s+r.val,0);
+  const tdc=rows.reduce((s,r)=>s+r.dc,0);
+  const tpct=(tdc/(tot-tdc))*100;
+  document.getElementById('ptTotal').textContent=fmt(tot);
+  const b=document.getElementById('ptBadge');
+  const up=tdc>=0;
+  b.className='badge '+(up?'up':'dn');
+  b.textContent=(up?'+ ':'-  ')+fmt(Math.abs(tdc))+' ('+(tpct>=0?'+':'')+tpct.toFixed(2)+'%)';
+  document.getElementById('hList').innerHTML=rows.map(r=>{
+    const pct=(r.val/tot*100).toFixed(1);
+    const up=r.dc>=0;
+    const cc=up?'var(--green)':'var(--red)';
+    return`<div class="hcard">
+      <div class="hcard-top">
+        <div>
+          <div class="sym">${r.s} <span style="font-size:11px;font-weight:400;color:var(--muted)">×${r.q.toLocaleString()}</span></div>
+          <div class="qty">${r.n}</div>
+        </div>
+        <div>
+          <div class="hval">${fmt(r.val)}</div>
+          <div class="hchg ${up?'up':'dn'}">${up?'+':''}${fmt(r.dc)} &middot; ${up?'+':''}${r.c.toFixed(2)}%</div>
+        </div>
+      </div>
+      <div class="hmeta"><span>£${pp(r.p)}/share</span><span>${pct}%</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${cc}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function buildD(){
+  const tot=DIVS.reduce((s,d)=>s+d.a,0);
+  document.getElementById('dTotal').textContent=fmt(tot);
+  document.getElementById('dCount').textContent=DIVS.length;
+  const sel=document.getElementById('dSym');
+  if(!sel.options.length) H.forEach(h=>{sel.add(new Option(`${h.s} – ${h.n}`,h.s));});
+  const sorted=[...DIVS].sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('dList').innerHTML=sorted.map(d=>`
+    <div class="div-item">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="div-badge">${d.s}</div>
+        <div>
+          <div style="font-size:13px;font-weight:600">${d.n}</div>
+          <div style="font-size:11px;color:var(--muted)">${fd(d.date)}</div>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:700;font-family:'Courier New',monospace;color:var(--green)">${fmt(d.a)}</div>
+    </div>`).join('');
+}
+
+function sw(tab){
+  document.getElementById('pH').style.display=tab==='h'?'':'none';
+  document.getElementById('pD').style.display=tab==='d'?'':'none';
+  document.getElementById('tH').className='tab'+(tab==='h'?' on':'');
+  document.getElementById('tD').className='tab'+(tab==='d'?' on':'');
+  if(tab==='d') buildD();
+}
+
+function togForm(){
+  formOpen=!formOpen;
+  document.getElementById('dForm').style.display=formOpen?'':'none';
+  document.getElementById('addBtn').textContent=formOpen?'✕ Cancel':'+ Log dividend';
+}
+
+function saveDiv(){
+  const date=document.getElementById('dDate').value;
+  const sym=document.getElementById('dSym').value;
+  const amt=parseFloat(document.getElementById('dAmt').value);
+  if(!date||!amt) return;
+  const h=H.find(x=>x.s===sym);
+  DIVS.push({id:Date.now(),date,s:sym,n:h?.n||sym,a:amt});
+  document.getElementById('dDate').value='';
+  document.getElementById('dAmt').value='';
+  togForm(); buildD();
+}
+
+async function doFetch(){
+  const ic=document.getElementById('rIcon');
+  ic.classList.add('spinning');
+  document.getElementById('ptMsg').textContent='Fetching live prices…';
+  try{
+    const syms=H.map(x=>x.t).join(',');
+    const proxy='https://api.allorigins.win/get?url='+encodeURIComponent('https://query1.finance.yahoo.com/v7/finance/quote?symbols='+syms);
+    const r=await fetch(proxy);
+    const j=await r.json();
+    const d=JSON.parse(j.contents);
+    for(const q of d.quoteResponse.result||[]){
+      if(!q) continue;
+      const div=q.currency==='GBp'?100:1;
+      PR[q.symbol]={p:q.regularMarketPrice/div,v:q.regularMarketPreviousClose/div,c:q.regularMarketChangePercent||0};
+    }
+    const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('ptMsg').textContent='Live · updated '+t;
+    document.getElementById('ptDot').className='dot live';
+    buildH();
+  }catch(e){
+    document.getElementById('ptMsg').textContent='Showing cached prices (30 Apr 2026)';
+    document.getElementById('ptDot').className='dot';
+  }finally{
+    ic.classList.remove('spinning');
+  }
+}
+
+buildH();
+doFetch();
+setInterval(doFetch,90000);
+</script>
+</body>
+</html>
